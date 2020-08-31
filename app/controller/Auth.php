@@ -13,6 +13,13 @@ use thans\jwt\facade\JWTAuth;
 
 class Auth
 {
+    public function me()
+    {
+        $id = JWTAuth::auth()['id'];
+        $data = User::find($id);
+        return json($data);
+    }
+
     public function login()
     {
         $requestData = Request::post();
@@ -21,6 +28,7 @@ class Auth
         
         if ($user !== null && password_verify($requestData['password'], $user->password)) {
             return json([
+                'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'token' => JWTAuth::builder(['id' => $user->id]),
@@ -47,6 +55,7 @@ class Auth
             $data = User::find($create->id);
 
             return json([
+                'id' => $data->id,
                 'name' => $data->name,
                 'email' => $data->email,
                 'token' => JWTAuth::builder(['id' => $data->id]),
