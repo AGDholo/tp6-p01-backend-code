@@ -15,9 +15,15 @@ class Auth
 {
     public function me()
     {
-        $id = JWTAuth::auth()['id'];
-        $data = User::find($id);
-        return json($data);
+        try {
+            $id = JWTAuth::auth()['id'];
+            $data = User::find($id);
+            return json($data);
+        } catch (Exception $e) {
+            return json([
+                'message' => '请先登录'
+            ], 401);
+        }
     }
 
     public function login()
@@ -25,7 +31,7 @@ class Auth
         $requestData = Request::post();
 
         $user = User::where('email', $requestData['email'])->find();
-        
+
         if ($user !== null && password_verify($requestData['password'], $user->password)) {
             return json([
                 'id' => $user->id,
@@ -37,7 +43,7 @@ class Auth
         } else {
             return json(
                 [
-                    'error' => '授权错误，请检查邮件地址或密码'
+                    'message' => '授权错误，请检查邮件地址或密码'
                 ],
                 401
             );
@@ -64,7 +70,12 @@ class Auth
 
             return json($data);
         } catch (ValidateException $e) {
-            return json($e->getError(), 400);
+            return json(
+                [
+                    'message' => $e->getError()
+                ],
+                400
+            );
         }
     }
 
@@ -72,18 +83,18 @@ class Auth
     {
         $authorization = Request::header('Authorization');
         $token = explode('Bearer ', $authorization)[1];
-        
+
         try {
             JWTAuth::invalidate($token);
             JWTAuth::validate($token);
 
             return json([
-                'success' => '登出成功'
+                'message' => '登出成功'
             ]);
         } catch (Exception $e) {
             return json([
-                'error' => '登出失败，服务器内部错误'
-            ], 500);
+                'message' => '登出失败，请检查 token 有效情况'
+            ], 403);
         }
     }
 }
