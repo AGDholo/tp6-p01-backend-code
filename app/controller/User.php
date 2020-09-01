@@ -6,9 +6,17 @@ namespace app\controller;
 
 use think\Request;
 use app\model\User as UserModel;
+use thans\jwt\facade\JWTAuth;
 
 class User
 {
+    // 定义中间件
+    protected $middleware = [
+        \thans\jwt\middleware\JWTAuth::class => [
+            'except' => ['index', 'read']
+        ],
+    ];
+
     /**
      * 显示资源列表
      *
@@ -51,7 +59,21 @@ class User
      */
     public function update(Request $request, $id)
     {
-        //
+        $authID = JWTAuth::auth()['id'];
+
+        if ($authID != $id) {
+            return json([
+                "message" => "非法请求"
+            ], 401);
+        }
+
+        UserModel::update([
+            "id" => $id,
+            "name" => $request->param('name')
+        ]);
+
+        $data = UserModel::find($id);
+        return json($data);
     }
 
     /**
