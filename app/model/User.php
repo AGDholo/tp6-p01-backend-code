@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace app\model;
 
-use think\Model;
+use think\model\Pivot;
 
 /**
  * @mixin \think\Model
  */
-class User extends Model
+class User extends Pivot
 {
     protected $table = 'users';
 
@@ -24,7 +24,7 @@ class User extends Model
     {
         return password_hash($value, PASSWORD_DEFAULT);
     }
-    
+
     public function setEmailAttr($value)
     {
         return strtolower($value);
@@ -34,5 +34,16 @@ class User extends Model
     public function tweets()
     {
         return $this->hasMany(Tweet::class);
+    }
+
+    // 用户与粉丝多对多关联
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, Follower::class, 'user_id', 'follower_id');
+    }
+
+    public function followings()
+    {
+        return $this->belongsToMany(User::class, Follower::class, 'follower_id', 'user_id');
     }
 }
