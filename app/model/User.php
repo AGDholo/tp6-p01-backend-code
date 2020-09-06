@@ -29,4 +29,10 @@ class User extends Model
     {
         return strtolower($value);
     }
+
+    // 用户与推文关联
+    public function tweets()
+    {
+        return $this->hasMany(Tweet::class);
+    }
 }
