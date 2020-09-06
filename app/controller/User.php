@@ -46,7 +46,10 @@ class User
      */
     public function read($id)
     {
-        $data = UserModel::find($id);
+        $data = UserModel::with(['tweets' => function($query) {
+            $query->order('created_at desc');
+        }])->find($id);
+        
         return json($data);
     }
 
