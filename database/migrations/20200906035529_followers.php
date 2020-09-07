@@ -13,8 +13,6 @@ class Followers extends Migrator
         $table->addColumn('follower_id', 'integer')
             ->addColumn('user_id', 'integer')
             ->addTimestamps('created_at', 'updated_at')
-            ->addIndex('follower_id', ['unique' => true])
-            ->addIndex('user_id', ['unique' => true])
             ->create();
     }
     /**

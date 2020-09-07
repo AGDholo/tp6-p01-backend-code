@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace app\controller;
 
 use app\model\Tweet as TweetModel;
+use app\model\User;
 use think\Request;
 use thans\jwt\facade\JWTAuth;
 
@@ -23,10 +24,24 @@ class Tweet
      *
      * @return \think\Response
      */
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->param('all_tweets'))
+            return json(TweetModel::with(['user'])->order('created_at desc')->select());
+
+        // 关注用户
+        $authID = JWTAuth::auth()['id'] . '';
+
+        $data = User::with(['followers', 'followings', 'tweets' => function ($query) {
+            $query->order('created_at desc');
+        }])->find($authID);
+
+        $followers_ids = $data->followers->column('id');
+
+        $ids = [...$followers_ids, $authID];
+
         // 使用预加载的方法返回所有关联推文
-        $data = TweetModel::with(['user'])->order('created_at desc')->select();
+        $data = TweetModel::with(['user'])->whereIn('user_id', $ids)->order('created_at desc')->select();
         return json($data);
     }
 
@@ -39,7 +54,7 @@ class Tweet
     public function save(Request $request)
     {
         // 获取当前用户 ID
-        $authID = JWTAuth::auth()['id']. '';
+        $authID = JWTAuth::auth()['id'] . '';
 
         // 将当前 ID 与用户一起插入
         TweetModel::create([
